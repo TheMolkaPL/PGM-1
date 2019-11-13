@@ -23,9 +23,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
 import tc.oc.pgm.AllTranslations;
-import tc.oc.pgm.PGM;
 import tc.oc.pgm.api.match.Match;
 import tc.oc.pgm.api.match.MatchScope;
 import tc.oc.pgm.api.party.Competitor;
@@ -36,11 +34,10 @@ import tc.oc.pgm.events.ListenerScope;
 import tc.oc.pgm.ghostsquadron.RevealTask.RevealEntry;
 import tc.oc.pgm.match.MatchModule;
 import tc.oc.pgm.util.MatchPlayers;
+import tc.oc.server.Scheduler;
 
 @ListenerScope(MatchScope.RUNNING)
 public class GhostSquadronMatchModule extends MatchModule implements Listener {
-  BukkitTask mainTask;
-  BukkitTask revealTask;
   final ClassMatchModule classMatchModule;
   public final Map<Location, UUID> landmines = Maps.newHashMap();
   public final Map<Location, Competitor> landmineTeams = Maps.newHashMap();
@@ -69,15 +66,9 @@ public class GhostSquadronMatchModule extends MatchModule implements Listener {
 
   @Override
   public void enable() {
-    GhostSquadronTask task = new GhostSquadronTask(this.match, this, this.classMatchModule);
-    this.mainTask = Bukkit.getScheduler().runTaskTimer(PGM.get(), task, 0, 10);
-    this.revealTask = Bukkit.getScheduler().runTaskTimer(PGM.get(), new RevealTask(this), 0, 1);
-  }
-
-  @Override
-  public void disable() {
-    this.mainTask.cancel();
-    this.revealTask.cancel();
+    Scheduler scheduler = this.match.getScheduler(MatchScope.RUNNING);
+    scheduler.runTaskTimer(10L, new GhostSquadronTask(this.match, this, this.classMatchModule));
+    scheduler.runTaskTimer(1L, new RevealTask(this));
   }
 
   /*
